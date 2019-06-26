@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "host": "npm run build && docker run --name gigs-client -p 7777:80 -d -v `pwd`/dist:/usr/share/nginx/html:cached nginx",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "test:e2e": "vue-cli-service test:e2e",
