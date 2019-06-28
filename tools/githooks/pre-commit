@@ -1,0 +1,40 @@
+#!/bin/bash
+cd "$(git rev-parse --show-toplevel)"
+ESLINT="node_modules/.bin/eslint"
+ESLINT_OPTS="-c .eslintrc.js"
+pwd
+
+if [[ ! -x "$ESLINT" ]]; then
+  printf "\t\033[31mPlease install ESlint\033[0m (npm install eslint)\n"
+  exit 1
+fi
+
+STAGED_FILES=($(git diff --cached --name-only --diff-filter=ACM | grep -E "(vue|.tsx{0,1}|.jsx{0,1})$"))
+
+echo "lint ${#STAGED_FILES[@]} files..."
+
+if [[ "$STAGED_FILES" = "" ]]; then
+  exit 0
+fi
+
+$ESLINT $ESLINT_OPTS "${STAGED_FILES[@]}" --fix
+
+ESLINT_EXIT="$?"
+
+# Re-add files since they may have been fixed
+# git add "${STAGED_FILES[@]}"
+
+if [[ "${ESLINT_EXIT}" == 0 ]]; then
+  FIXED_FILES=($(git diff --name-only --diff-filter=ACM | grep -E "(vue|.tsx{0,1}|.jsx{0,1})$"))
+  if [[ "$FIXED_FILES" = "" ]]; then
+      printf "\033[32mno lint error\033[0m\n"
+  else
+      printf "\033[33mfix ${#FIXED_FILES[@]} files. check diff and commit them if no problem\033[0m\n"
+      git diff
+  fi
+else
+  printf "\n\033[31mcommit failed:\033[0m Fix eslint errors and try again\n"
+  exit 1
+fi
+
+exit $?
